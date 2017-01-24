@@ -2,6 +2,7 @@ package OrindaAcademy;
 
 /**
  * An object to contain a the data for a NPSP_Data_ImportTemplate line, and a "toString()" to generate that output line
+ * Salesforces's "Non Profit Success Package"
  * @author stevepodell
  *
  */

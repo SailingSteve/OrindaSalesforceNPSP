@@ -22,15 +22,15 @@ import java.util.Set;
 /**
  * Open a csv infile of reorganized and merged Orinda Academy SIS yearly student output files
  * 
- * Parse each line (2005, 2006 through 2008, and 2008 on have different data layouts and need to be treated seperately
+ * Parse each line (2005, 2006 through 2008, and 2008 on have different data layouts and need to be treated separately)
  * 
  * Manual treatment of the SIS files, includes adding a first column with the school year
  * 	for 2006 through 2008 
  * 		parent names for married parents were entered as "Daniel & Lisa Stefani", those need to be pulled apart
- * 		a 5th column "Man First" contains a manually generated boolean that tells if the first name is a man "Daniel & Lisa Stefani" (true), or "Rebecca & Scott Heskes" (false)
- * 		manually make sure that names like "Daniel & Lisa Stefani" have ampersands, and "Susan Rosenthal/Howie Perlin" is used to indicate marrieds with different last names
- * 		convert "James and Terry Holloway" to "James & Terry Holloway" 
- * 
+ * 		a 5th column "Man First" contains a manually generated boolean that tells if the first name is a man "Daniel & Lisa Smith" (true), or "Rebecca & Scott Jones" (false)
+ * 		manually make sure that names like "Daniel & Lisa Smith" have ampersands, and "Susan Rosenthal/Howie Perlin" is used to indicate marrieds with different last names
+ * 		convert "James and Terry Holmes" to "James & Terry Holmes" 
+ *  
  * Output a csv file that is in the format of the NPSP import format, which should be ready to read into Salesforce
  * 
  * @author stevepodell
@@ -300,5 +300,4 @@ public class OaImportToSF {
 
 		} // all adult types
 	}
-			
 }

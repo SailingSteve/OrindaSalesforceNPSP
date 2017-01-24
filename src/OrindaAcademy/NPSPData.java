@@ -13,7 +13,7 @@ public class NPSPData {
 	}
 	
 	/**
-	 * Early days, the only choices are two parents together, one parent, two parents apart.   
+	 * Early days (2005 through 2011), the only choices are two parents together, one parent, two parents apart.   
 	 * 
 	 * If PARENT/GUARDIAN contains two names, and there is NO PARENT/GUAR 2 
 	 * 		then take the first two CONTACTs, make them into a single SF row
@@ -98,6 +98,8 @@ public class NPSPData {
 
 	// Parents together same name, different name, and single parent
 	private void parseEarlyParentsNonSecondaryPhonesAddress(SFImportObject sfio, boolean bManFirst, String[] sa) {
+		int year = Integer.valueOf(sa[0].substring(0, 4));
+		
 		sfio.HOME_STREET              = sa[13];
 		sfio.HOME_CITY                = sa[14];
 		sfio.HOME_STATE_PROVINCE      = sa[15];
@@ -108,11 +110,20 @@ public class NPSPData {
 		sfio.CONTACT1_MOBILE_PHONE    = (bManFirst) ? sa[22] : sa[23];
 		sfio.CONTACT2_MOBILE_PHONE    = (bManFirst) ? sa[23] : sa[22];
 		sfio.CONTACT1_SALUTATION      = sa[24];
-		sfio.CONTACT1_PREFERRED_EMAIL = sa[33];
-		sfio.CONTACT1_PERSONAL_EMAIL  = (bManFirst) ? sa[34] : sa[36];
-		sfio.CONTACT2_PERSONAL_EMAIL  = (bManFirst) ? sa[36] : sa[34];
-		sfio.CONTACT1_WORK_EMAIL      = (bManFirst) ? sa[35] : sa[37];
-		sfio.CONTACT2_WORK_EMAIL      = (bManFirst) ? sa[37] : sa[35];
+		
+		if( year == 2008 || year == 2009 || year == 2010 ) {
+			sfio.CONTACT1_PREFERRED_EMAIL = sa[33];
+			sfio.CONTACT1_PERSONAL_EMAIL  = (bManFirst) ? sa[33] : sa[34];
+			sfio.CONTACT2_PERSONAL_EMAIL  = (bManFirst) ? sa[34] : sa[33];
+			sfio.CONTACT2_PREFERRED_EMAIL = (bManFirst) ? sa[34] : sa[33];
+		} else {
+			sfio.CONTACT1_PREFERRED_EMAIL = sa[33];
+			sfio.CONTACT1_PERSONAL_EMAIL  = (bManFirst) ? sa[34] : sa[36];
+			sfio.CONTACT2_PERSONAL_EMAIL  = (bManFirst) ? sa[36] : sa[34];
+			sfio.CONTACT1_WORK_EMAIL      = (bManFirst) ? sa[35] : sa[37];
+			sfio.CONTACT2_WORK_EMAIL      = (bManFirst) ? sa[37] : sa[35];			
+		}
+		
 		sfio.Relationship1            = (bManFirst) ? "Father" : "Mother";
 		if(sfio.CONTACT_TYPE.equals("Parents Together")) {
 			sfio.Relationship2        = (bManFirst) ? "Mother" : "Father";
@@ -266,7 +277,7 @@ public class NPSPData {
 			sfioKido.HOME_STREET            = sa[12];
 			sfioKido.HOME_CITY              = sa[13];
 			sfioKido.HOME_STATE_PROVINCE    = sa[14];
-			sfioKido.HOME_COUNTRY     		= sa[15];
+			sfioKido.HOME_COUNTRY           = sa[15];
 			sfioKido.HOME_ZIP_POSTAL_CODE   = sa[16];
 			sfioKido.HOUSEHOLD_PHONE        = sa[17];
 
@@ -293,7 +304,7 @@ public class NPSPData {
 	private void parseLateParentsAndAddresses(SFImportObject sfio2Par, SFImportObject sfioPar1, SFImportObject sfioPar2, 
 			SFImportObject sfioPar3, SFImportObject sfioPar4, SFImportObject sfioKido, String[] sa) {
 		try { 
-			if( compareAddresses(sa[12], sa[45]) ) {							// Two parents living together, same address
+			if( compareAddresses(sa[12], sa[45]) ) {                    // Two parents living together, same address
 				sfio2Par.CONTACT1_FIRSTNAME = sa[5].trim();
 				if( ! sa[6].trim().isEmpty() )
 					sfio2Par.CONTACT1_FIRSTNAME += " " + sa[6].trim();
@@ -414,8 +425,5 @@ public class NPSPData {
 		
 		sfio.Relationship1            = sa[26+offset];
 		sfio.CONTACT_TYPE 			  = sa[26+offset];
-
 	}
-
-	
 }
