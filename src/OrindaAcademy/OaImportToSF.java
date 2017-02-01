@@ -46,17 +46,19 @@ public class OaImportToSF {
 		if(args.length > 1)
 			outFile = args[1];
 		
-		// Delete the output files
+		/*
+		 * Step:  Delete the previous output files
+		 */
 		FileInputStream fstream = null;
 		try {
 			File f = new File(outFile);
 	        f.delete();
+	        f = new File("full.csv");
+	        f.delete();
+	        System.out.println("Deleted full.csv");
 	        f = new File("sibs.txt");
 	        f.delete();
 	        System.out.println("Deleted sibs.txt");
-	        f = new File("familyShareForeignKey.csv");
-	        f.delete();
-	        System.out.println("Deleted familyShareForeignKey.csv");
 	        f = new File("reduced.csv");
 	        f.delete();
 	        System.out.println("Deleted reduced.csv");
@@ -66,7 +68,9 @@ public class OaImportToSF {
 			return;
 		}		
 		
-		// Read in the processed Excel file, that has been written out as csv
+		/*
+		 * Step:  Read in the processed Excel file, that has been written out from Excel as a csv
+		 */
 		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
 		List<SFImportObject> list = new ArrayList<SFImportObject>();
@@ -92,30 +96,205 @@ public class OaImportToSF {
 			list.addAll(sfios);
 		}
 		br.close();
+		
+		/*
+		 * Step:  Replace later student names with the first student name in a family so that they share the first ACCOUNT1 NAME (foreign key)
+		 */		
+		for(SFImportObject o: list) {
+			String replacement = Siblings.map.get(o.ACCOUNT1_NAME.trim());
+
+			if(replacement != null && replacement.length() > 0 ) {
+				o.ACCOUNT1_NAME = o.OA_SIS_Unique_ID = replacement.trim();
+			}
+			replacement = Siblings.map.get(o.ACCOUNT2_NAME.trim());
+			if(replacement != null && replacement.length() > 0 ) {
+				o.ACCOUNT2_NAME = replacement.trim();
+			}
+		}
 	
-		// Sort by foreign key (ACCOUNT1_NAME)
+		/*
+		 * Step:  Sort the list by ACCOUNT1_NAME
+		 */		
 		Collections.sort(list, new Comparator<SFImportObject>(){
 		     public int compare(SFImportObject o1, SFImportObject o2){
 		         return o1.ACCOUNT1_NAME.compareToIgnoreCase(o2.ACCOUNT1_NAME);
 		     }
 		});
 
+		FileWriter fullfw = new FileWriter("full.csv");
 		Set<String> linkedHashSet = new LinkedHashSet<String>();
 		for(SFImportObject o: list) {
 			linkedHashSet.add(o.ACCOUNT1_NAME.trim());
+			fullfw.write(o.toString()+"\n");
+		}
+		fullfw.close();
+		System.out.println("Wrote full.csv");  
+		
+		
+		/*
+		 * Build the Sibling consolidation list that takes multiple siblings, and associates them under the SIS student name field 
+		 * that includes  of the first sibling to attend the school 
+		 */
+		buildSiblingSubstitutionList(linkedHashSet);
+		
+		/*
+		 * Step:  For a given family, reduce the set of SFImportObjects to the least possible number while retaining the key data
+		 */		
+		List<SFImportObject> reducedlist = new ArrayList<SFImportObject>();
+		List<SFImportObject> foreignKeyList = new ArrayList<SFImportObject>();
+		String fkey = "";
+		for(SFImportObject o: list) {
+			if(fkey.isEmpty()) {
+				fkey = o.ACCOUNT1_NAME;
+			} else if( fkey.equals(o.ACCOUNT1_NAME)) {
+				foreignKeyList.add(o);
+			} else {
+				reduceSet(foreignKeyList, reducedlist);
+				foreignKeyList.clear();
+				fkey = o.ACCOUNT1_NAME;
+				foreignKeyList.add(o);
+			}
 		}
 		
-		// Start the deduping, each student and parent has a line for each year they attended at this point.  Also need to combine families under one key value.
 		/*
-		Aardvark; Bill
-		Agramont; Elizabeth
-		Agramont; Gabriela
-		Agramont; Sebastian 
-		Agramont; Sergio
-		Podell; Steve
-		Frank; Joey
-		*/
+		 * Final Step: Write out the output file, reduced.csv, ready to be imported to Salesforce  
+		 */		
+		FileWriter fwRed = new FileWriter("reduced.csv");
+		fwRed.write(SFImportObject.NPSP_Data_ImportTemplate+"\n");
+		for(SFImportObject o: reducedlist) {
+			fwRed.write( o.toString() +"\n");
+		}
+		fwRed.close();		
+		System.out.println("Wrote reduced.csv");
 
+	}
+
+	/*
+	 * Reduce the set of parent and student names to one of each type for each participant 
+	 * (with the exception of two parents, married and living together, who share one import object)
+	 */
+	private static void reduceSet(List<SFImportObject> foreignKeyList, List<SFImportObject> reducedlist) {
+		List<SFImportObject> list = new ArrayList<SFImportObject>();
+		Set<String> names = new HashSet<String>();
+		
+		for(SFImportObject o: foreignKeyList) {
+			if(o.OA_Account_Type.equals("Student") || o.OA_Account_Type.equals("Summer Student") ) {
+				list.add(o);
+				names.add(o.CONTACT1_FIRSTNAME);				
+			}
+		}
+	
+		// First reduce the students and summer students
+		SFImportObject oNewest = null;
+		String First_Year_at_School = ""; 		//     Account1 Street
+		String First_Year_Grade = ""; 			//     Account1 City
+		String Last_Year_at_School = ""; 		//     Account1 State/Province
+		String Last_Year_Grade = ""; 			//     Account1 Country
+		String[] studentTypes = new String[]{ "Student","Summer Student" };
+		for(String type : studentTypes ) {			
+			for(String name : names) {
+				for(SFImportObject o2 : list) {
+					if( o2.OA_Account_Type.equals(type) && o2.CONTACT1_FIRSTNAME.equals(name) ) {
+						if(oNewest == null) {
+							oNewest = o2;
+							First_Year_at_School    = o2.SchoolYear;
+							Last_Year_at_School     = o2.SchoolYear;
+							First_Year_Grade        = o2.First_Year_Grade;
+							Last_Year_Grade         = o2.First_Year_Grade;
+						} else {
+							if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
+								if(o2.SchoolYear.length() > 0)
+									First_Year_at_School = o2.SchoolYear;
+								if( o2.First_Year_Grade.length() > 0)
+									First_Year_Grade     = o2.First_Year_Grade;
+							} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
+								oNewest = o2;
+								if(o2.SchoolYear.length() > 0)
+									Last_Year_at_School  =  o2.SchoolYear;
+								if(o2.First_Year_Grade.length() > 0)
+									Last_Year_Grade      =  o2.First_Year_Grade;
+							}
+						}
+					}
+				} 
+			if(oNewest != null) {
+				oNewest.First_Year_at_School  = First_Year_at_School;
+				oNewest.Last_Year_at_School   = Last_Year_at_School;
+				oNewest.First_Year_Grade      = First_Year_Grade;
+				oNewest.Last_Year_Grade       = Last_Year_Grade;
+				if(type.equals("Student") && oNewest.Last_Year_Grade.equals("12")) {
+					oNewest.Class_of = Last_Year_at_School.substring(5);
+				}
+					
+				reducedlist.add(oNewest);
+				oNewest = null;
+				}
+			} // this student			
+		} // this studentType
+
+
+		// Now reduce the adult record types, use the latest one as a basis for consolidation (it has the latest address info)
+		list = new ArrayList<SFImportObject>();
+		String[] adultTypes = new String[]{ "Parents Together","Parent","Uncle","Aunt","Father","Mother",
+											"Brother","Sister","Guardian","Host Family","Grandparent","Friend","Agent","Other"};		
+		
+		Set<String> adults = new HashSet<String>(Arrays.asList(adultTypes));
+		for(SFImportObject o: foreignKeyList) {
+			if(adults.contains(o.OA_Account_Type)) {
+				list.add(o);
+			}
+		}
+
+		oNewest = null;
+		for(String type : adultTypes ) {			
+			for(SFImportObject o2 : list) {
+				if( o2.OA_Account_Type.equals(type) ){
+					if(oNewest == null) {
+						oNewest = o2;
+						First_Year_at_School 	= o2.SchoolYear;
+						Last_Year_at_School 	= o2.SchoolYear;
+					} else {
+						if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
+							if(o2.SchoolYear.length() > 0)
+								First_Year_at_School = o2.SchoolYear;
+							if( o2.First_Year_Grade.length() > 0)
+								First_Year_Grade     = o2.First_Year_Grade;
+						} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
+							oNewest = o2;
+							if(o2.SchoolYear.length() > 0)
+								Last_Year_at_School  =  o2.SchoolYear;
+							if(o2.First_Year_Grade.length() > 0)
+								Last_Year_Grade      =  o2.First_Year_Grade;
+						}
+					}
+				}
+			} // this adult
+			
+			if(oNewest != null) {
+				oNewest.First_Year_at_School   = First_Year_at_School;
+				oNewest.Last_Year_at_School 	= Last_Year_at_School;
+				reducedlist.add(oNewest);
+				oNewest = null;
+			}
+
+		} // all adult types
+	}
+	
+	 /* each student and parent has a line for each year they attended at this point.  
+	 * Also need to combine families under one key value.
+	 * 
+	 * Aardvark; Bill
+	 * Aragon; Elizabeth
+	 * Aragon; Gabriela
+	 * Aragon; Sebastian 
+	 * Aragon; Sergio
+	 * Delancy; Steve
+	 * Frank; Joey
+	 */		
+	private static void buildSiblingSubstitutionList(Set<String> linkedHashSet) throws IOException {
+		/* 
+		 * Step:  Make a map of counters of unique Last Names
+		 */		
 		Map<String, Integer> counters = new HashMap<String, Integer>();
 		for(String s : linkedHashSet) {
 			String[] names = s.split(";");
@@ -135,16 +314,21 @@ public class OaImportToSF {
 			}
 		}
 		for(String s: remove) {
-			linkedHashSet.remove(s);
+			linkedHashSet.remove(s);		// Remove the Names that don't need consolidation by family
 		}
 		
 		/*
-		Agramont; Elizabeth
-		Agramont; Gabriela
-		Agramont; Sebastian 
-		Agramont; Sergio
+		Aragon; Elizabeth
+		Aragon; Gabriela
+		Aragon; Sebastian 
+		Aragon; Sergio
 		*/
 
+		/*
+		 * Step: Write out the list of possible sibling matches, this could be commented out if execution speed became a problem
+		 * because it is only needed once, and the output file sibs.txt is read into Siblings.java after being manually corrected.
+		 * The data was so messy, it was easier to do a manual step here. 
+		 */		
 		String uniqueKey = "";
 		FileWriter fw = new FileWriter("sibs.txt");
 
@@ -163,141 +347,6 @@ public class OaImportToSF {
 		}
 		fw.close();	
 		System.out.println("Wrote sibs.txt");  
-		// This is the list that goes into Siblings.java, I didn't make this automated since there is so much inconsistent data.  
-		
-		// Families share the first ACCOUNT1 NAME (foreign key)
-		for(SFImportObject o: list) {
-			String replacement = Siblings.map.get(o.ACCOUNT1_NAME.trim());
-			if(replacement != null && replacement.length() > 0 ) {
-				o.ACCOUNT1_NAME = replacement.trim();
-			}
-		}
-		
-		FileWriter fwRaw = new FileWriter("familyShareForeignKey.csv");
-		fwRaw.write(SFImportObject.NPSP_Data_ImportTemplate+"\n");
-		for(SFImportObject o: list) {
-			fwRaw.write( o.toString() +"\n");
-		}
-		fwRaw.close();
-		System.out.println("Wrote familyShareForeignKey.csv");
-
-
-		List<SFImportObject> reducedlist = new ArrayList<SFImportObject>();
-		List<SFImportObject> foreignKeyList = new ArrayList<SFImportObject>();
-		String fkey = "";
-		for(SFImportObject o: list) {
-			if(fkey.isEmpty()) {
-				fkey = o.ACCOUNT1_NAME;
-			} else if( fkey.equals(o.ACCOUNT1_NAME)) {
-				foreignKeyList.add(o);
-			} else {
-				reduceSet(foreignKeyList, reducedlist);
-				foreignKeyList.clear();
-				fkey = o.ACCOUNT1_NAME;
-				foreignKeyList.add(o);
-			}
-		}
-		
-		FileWriter fwRed = new FileWriter("reduced.csv");
-		fwRed.write(SFImportObject.NPSP_Data_ImportTemplate+"\n");
-		for(SFImportObject o: reducedlist) {
-			fwRed.write( o.toString() +"\n");
-		}
-		fwRed.close();		
-		System.out.println("Wrote reduced.csv");
-
 	}
-
-	private static void reduceSet(List<SFImportObject> foreignKeyList, List<SFImportObject> reducedlist) {
-		List<SFImportObject> list = new ArrayList<SFImportObject>();
-		Set<String> names = new HashSet<String>();
-
-		for(SFImportObject o: foreignKeyList) {
-			if(o.CONTACT_TYPE.equals("Student") || o.CONTACT_TYPE.equals("Summer Student") ) {
-				list.add(o);
-				names.add(o.CONTACT1_FIRSTNAME);
-			}
-		}
-
-		// First reduce the students and summer students
-		SFImportObject oNewest = null;
-		String FirstYearatSchool = ""; 		//     Account1 Street
-		String FirstYearGrade = ""; 			//     Account1 City
-		String LastYearatSchool = ""; 		//     Account1 State/Province
-		String LastYearGrade = ""; 			//     Account1 Country
-		String[] studentTypes = new String[]{ "Student","Summer Student" };
-		for(String type : studentTypes ) {			
-			for(String name : names) {
-				for(SFImportObject o2 : list) {
-					if( o2.CONTACT_TYPE.equals(type) && o2.CONTACT1_FIRSTNAME.equals(name) ) {
-						if(oNewest == null) {
-							oNewest = o2;
-							FirstYearatSchool 	= o2.SchoolYear;
-							LastYearatSchool 	= o2.SchoolYear;
-							FirstYearGrade 		= o2.FirstYearGrade;
-							LastYearGrade 		= o2.FirstYearGrade;
-						} else {
-							if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(FirstYearatSchool.substring(0, 4))) {
-								FirstYearatSchool = o2.SchoolYear;
-								FirstYearGrade    = o2.FirstYearGrade;
-							} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(LastYearatSchool.substring(0, 4))) {
-								oNewest = o2;
-								LastYearatSchool  = o2.SchoolYear;
-								LastYearGrade     = o2.FirstYearGrade;
-							}
-						}
-					}
-				} 
-			if(oNewest != null) {
-				oNewest.FirstYearatSchool   = FirstYearatSchool;
-				oNewest.LastYearatSchool 	= LastYearatSchool;
-				oNewest.FirstYearGrade      = FirstYearGrade;
-				oNewest.LastYearGrade       = LastYearGrade;
-				reducedlist.add(oNewest);
-				oNewest = null;
-				}
-			} // this student			
-		} // this studentType
-
-		// Now reduce the adult record types, use the latest one as a basis for consolidation (has the latest address info)
-		list = new ArrayList<SFImportObject>();
-		String[] adultTypes = new String[]{ "Parent","Parents Together", "Mother","Father","Grandparent","Other",
-											"Brother","Sister","Guardian","Host Family","Uncle","Aunt"};
-		Set<String> adults = new HashSet<String>(Arrays.asList(adultTypes));
-		for(SFImportObject o: foreignKeyList) {
-			if(adults.contains(o.CONTACT_TYPE)) {
-				list.add(o);
-			}
-		}
-
-		oNewest = null;
-		for(String type : adultTypes ) {			
-			for(SFImportObject o2 : list) {
-				if( o2.CONTACT_TYPE.equals(type) ){
-					if(oNewest == null) {
-						oNewest = o2;
-						FirstYearatSchool 	= o2.SchoolYear;
-						LastYearatSchool 	= o2.SchoolYear;
-					} else {
-						if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(FirstYearatSchool.substring(0, 4))) {
-							FirstYearatSchool = o2.SchoolYear;
-							FirstYearGrade    = o2.FirstYearGrade;
-						} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(LastYearatSchool.substring(0, 4))) {
-							oNewest = o2;
-							LastYearatSchool  = o2.SchoolYear;
-							LastYearGrade     = o2.FirstYearGrade;
-						}
-					}
-				}
-			} // this adult
-			
-			if(oNewest != null) {
-				oNewest.FirstYearatSchool   = FirstYearatSchool;
-				oNewest.LastYearatSchool 	= LastYearatSchool;
-				reducedlist.add(oNewest);
-				oNewest = null;
-			}
-
-		} // all adult types
-	}
+	
 }
