@@ -16,9 +16,11 @@ public class SFImportObject {
 			+ "Home Street,Home City,Home State/Province,Home Zip/Postal Code,Home Country,"
 			+ "Household OA Account Type,"
 			+ "Household First Year at School,Household First Year Grade,Household Last Year at School,Household Last Year Grade,Household Class of,"
-			+ "Contact1 Relationship1,Contact2 Relationship2,Contact Primary,OA Household Phone";
+			+ "Contact1 Relationship1,Contact2 Relationship2,Contact Primary,OA Household Phone,Student Names";
+
 	/*
-	OA SIS Unique ID         OA_SIS_Unique_ID__c       Text(50)																Household
+	These fields are actually in "Account", but the importer needs them to be labeled (in note field) Household.First_Year_Grade__c for example
+	OA SIS Unique ID         OA_SIS_Unique_ID__c       Text(50)																Household 
     OA Account Type          OA_Account_Type__c        Picklist																Household
 	First Year at School     First_Year_at_School__c   Text(16)			OA custom field,									Household
 	First Year Grade         First_Year_Grade__c       Number(2, 0)		OA custom field, 									Household
@@ -30,6 +32,7 @@ public class SFImportObject {
 	Contact Type             Contact_Type__c           Picklist			Shares the OA "Contact Types" Picklist Value Sets	Household
 	Contact Primary          Contact_Primary__c        Checkbox			OA custom field
 	OA Household Phone       OA_Household_Phone__c     Phone            OA custom field,                                    Household
+	Student Names            Student_Names__c          Text(50)         OA custom field,                                    Household
 	*/
 	
 
@@ -81,6 +84,7 @@ public class SFImportObject {
     public String Contact_Primary = "false";   			
     public String SchoolYear = "";				
     public String OA_Household_Phone  = "";            // The NPSP version is broken, write instead into a OA Household Phone custom field
+    public String Student_Names = "";
 	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -129,7 +133,8 @@ public class SFImportObject {
 		sb.append(Relationship1.trim()).append(",");
 		sb.append(Relationship2.trim()).append(",");
 		sb.append(Contact_Primary.trim()).append(",");
-		sb.append(OA_Household_Phone.trim());           // The NPSP version is broken, write instead into a OA Household Phone custom field
+		sb.append(OA_Household_Phone.trim()).append(",");           // The NPSP version of "Household Phone" is broken, write instead into a OA Household Phone custom field
+		sb.append(Student_Names.trim());
 
 
 		return sb.toString();

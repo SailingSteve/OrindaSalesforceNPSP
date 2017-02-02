@@ -186,15 +186,22 @@ public class OaImportToSF {
 	
 		// First reduce the students and summer students
 		SFImportObject oNewest = null;
+		String students = "";
 		String First_Year_at_School = ""; 		//     Account1 Street
 		String First_Year_Grade = ""; 			//     Account1 City
 		String Last_Year_at_School = ""; 		//     Account1 State/Province
 		String Last_Year_Grade = ""; 			//     Account1 Country
-		String[] studentTypes = new String[]{ "Student","Summer Student" };
+		String[] studentTypes = new String[]{ "Summer Student","Student"};
 		for(String type : studentTypes ) {			
 			for(String name : names) {
 				for(SFImportObject o2 : list) {
 					if( o2.OA_Account_Type.equals(type) && o2.CONTACT1_FIRSTNAME.equals(name) ) {
+						if( ! students.contains(o2.CONTACT1_FIRSTNAME)) {
+							if(students.length() > 0 )
+								students += ", ";
+							students += (o2.CONTACT1_FIRSTNAME);
+						}
+
 						if(oNewest == null) {
 							oNewest = o2;
 							First_Year_at_School    = o2.SchoolYear;
@@ -251,32 +258,24 @@ public class OaImportToSF {
 				if( o2.OA_Account_Type.equals(type) ){
 					if(oNewest == null) {
 						oNewest = o2;
-						First_Year_at_School 	= o2.SchoolYear;
-						Last_Year_at_School 	= o2.SchoolYear;
 					} else {
 						if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
-							if(o2.SchoolYear.length() > 0)
-								First_Year_at_School = o2.SchoolYear;
-							if( o2.First_Year_Grade.length() > 0)
-								First_Year_Grade     = o2.First_Year_Grade;
 						} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
 							oNewest = o2;
-							if(o2.SchoolYear.length() > 0)
-								Last_Year_at_School  =  o2.SchoolYear;
-							if(o2.First_Year_Grade.length() > 0)
-								Last_Year_Grade      =  o2.First_Year_Grade;
 						}
 					}
 				}
 			} // this adult
 			
 			if(oNewest != null) {
-				oNewest.First_Year_at_School   = First_Year_at_School;
-				oNewest.Last_Year_at_School 	= Last_Year_at_School;
+				oNewest.First_Year_at_School   = First_Year_at_School;  // This will be for the last Student processed, in the case of multiple enrollees, so it is imperfect
+				oNewest.Last_Year_at_School    = Last_Year_at_School;
+				oNewest.First_Year_Grade       = First_Year_Grade; 			
+				oNewest.Last_Year_Grade        = Last_Year_Grade; 			
+				oNewest.Student_Names          = "\"" + students + "\"";
 				reducedlist.add(oNewest);
 				oNewest = null;
 			}
-
 		} // all adult types
 	}
 	
