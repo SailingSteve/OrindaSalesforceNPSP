@@ -101,14 +101,14 @@ public class OaImportToSF {
 		 * Step:  Replace later student names with the first student name in a family so that they share the first ACCOUNT1 NAME (foreign key)
 		 */		
 		for(SFImportObject o: list) {
-			String replacement = Siblings.map.get(o.getACCOUNT1_NAME().trim());
+			String replacement = Siblings.map.get(o.getACCOUNT1_NAME());
 
 			if(replacement != null && replacement.length() > 0 ) {
-				o.setACCOUNT1_NAME(o.setOA_SIS_Unique_ID(replacement.trim()));
+				o.setACCOUNT1_NAME(o.setOA_SIS_Unique_ID(replacement));
 			}
-			replacement = Siblings.map.get(o.getACCOUNT2_NAME().trim());
+			replacement = Siblings.map.get(o.getACCOUNT2_NAME());
 			if(replacement != null && replacement.length() > 0 ) {
-				o.setACCOUNT2_NAME(replacement.trim());
+				o.setACCOUNT2_NAME(replacement);
 			}
 		}
 	
@@ -124,7 +124,7 @@ public class OaImportToSF {
 		FileWriter fullfw = new FileWriter("full.csv");
 		Set<String> linkedHashSet = new LinkedHashSet<String>();
 		for(SFImportObject o: list) {
-			linkedHashSet.add(o.getACCOUNT1_NAME().trim());
+			linkedHashSet.add(o.getACCOUNT1_NAME());
 			fullfw.write(o.toString()+"\n");
 		}
 		fullfw.close();
