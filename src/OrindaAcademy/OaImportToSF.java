@@ -101,14 +101,14 @@ public class OaImportToSF {
 		 * Step:  Replace later student names with the first student name in a family so that they share the first ACCOUNT1 NAME (foreign key)
 		 */		
 		for(SFImportObject o: list) {
-			String replacement = Siblings.map.get(o.ACCOUNT1_NAME.trim());
+			String replacement = Siblings.map.get(o.getACCOUNT1_NAME().trim());
 
 			if(replacement != null && replacement.length() > 0 ) {
-				o.ACCOUNT1_NAME = o.OA_SIS_Unique_ID = replacement.trim();
+				o.setACCOUNT1_NAME(o.setOA_SIS_Unique_ID(replacement.trim()));
 			}
-			replacement = Siblings.map.get(o.ACCOUNT2_NAME.trim());
+			replacement = Siblings.map.get(o.getACCOUNT2_NAME().trim());
 			if(replacement != null && replacement.length() > 0 ) {
-				o.ACCOUNT2_NAME = replacement.trim();
+				o.setACCOUNT2_NAME(replacement.trim());
 			}
 		}
 	
@@ -117,14 +117,14 @@ public class OaImportToSF {
 		 */		
 		Collections.sort(list, new Comparator<SFImportObject>(){
 		     public int compare(SFImportObject o1, SFImportObject o2){
-		         return o1.ACCOUNT1_NAME.compareToIgnoreCase(o2.ACCOUNT1_NAME);
+		         return o1.getACCOUNT1_NAME().compareToIgnoreCase(o2.getACCOUNT1_NAME());
 		     }
 		});
 
 		FileWriter fullfw = new FileWriter("full.csv");
 		Set<String> linkedHashSet = new LinkedHashSet<String>();
 		for(SFImportObject o: list) {
-			linkedHashSet.add(o.ACCOUNT1_NAME.trim());
+			linkedHashSet.add(o.getACCOUNT1_NAME().trim());
 			fullfw.write(o.toString()+"\n");
 		}
 		fullfw.close();
@@ -145,13 +145,13 @@ public class OaImportToSF {
 		String fkey = "";
 		for(SFImportObject o: list) {
 			if(fkey.isEmpty()) {
-				fkey = o.ACCOUNT1_NAME;
-			} else if( fkey.equals(o.ACCOUNT1_NAME)) {
+				fkey = o.getACCOUNT1_NAME();
+			} else if( fkey.equals(o.getACCOUNT1_NAME())) {
 				foreignKeyList.add(o);
 			} else {
 				reduceSet(foreignKeyList, reducedlist);
 				foreignKeyList.clear();
-				fkey = o.ACCOUNT1_NAME;
+				fkey = o.getACCOUNT1_NAME();
 				foreignKeyList.add(o);
 			}
 		}
@@ -178,9 +178,9 @@ public class OaImportToSF {
 		Set<String> names = new HashSet<String>();
 		
 		for(SFImportObject o: foreignKeyList) {
-			if(o.OA_Account_Type.equals("Student") || o.OA_Account_Type.equals("Summer Student") ) {
+			if(o.getOA_Account_Type().equals("Student") || o.getOA_Account_Type().equals("Summer Student") ) {
 				list.add(o);
-				names.add(o.CONTACT1_FIRSTNAME);				
+				names.add(o.getCONTACT1_FIRSTNAME());				
 			}
 		}
 	
@@ -195,42 +195,42 @@ public class OaImportToSF {
 		for(String type : studentTypes ) {			
 			for(String name : names) {
 				for(SFImportObject o2 : list) {
-					if( o2.OA_Account_Type.equals(type) && o2.CONTACT1_FIRSTNAME.equals(name) ) {
-						if( ! students.contains(o2.CONTACT1_FIRSTNAME)) {
+					if( o2.getOA_Account_Type().equals(type) && o2.getCONTACT1_FIRSTNAME().equals(name) ) {
+						if( ! students.contains(o2.getCONTACT1_FIRSTNAME())) {
 							if(students.length() > 0 )
 								students += ", ";
-							students += (o2.CONTACT1_FIRSTNAME);
+							students += (o2.getCONTACT1_FIRSTNAME());
 						}
 
 						if(oNewest == null) {
 							oNewest = o2;
-							First_Year_at_School    = o2.SchoolYear;
-							Last_Year_at_School     = o2.SchoolYear;
-							First_Year_Grade        = o2.First_Year_Grade;
-							Last_Year_Grade         = o2.First_Year_Grade;
+							First_Year_at_School    = o2.getSchoolYear();
+							Last_Year_at_School     = o2.getSchoolYear();
+							First_Year_Grade        = o2.getFirst_Year_Grade();
+							Last_Year_Grade         = o2.getFirst_Year_Grade();
 						} else {
-							if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
-								if(o2.SchoolYear.length() > 0)
-									First_Year_at_School = o2.SchoolYear;
-								if( o2.First_Year_Grade.length() > 0)
-									First_Year_Grade     = o2.First_Year_Grade;
-							} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
+							if (Integer.parseInt(o2.getSchoolYear().substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
+								if(o2.getSchoolYear().length() > 0)
+									First_Year_at_School = o2.getSchoolYear();
+								if( o2.getFirst_Year_Grade().length() > 0)
+									First_Year_Grade     = o2.getFirst_Year_Grade();
+							} else if(Integer.parseInt(o2.getSchoolYear().substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
 								oNewest = o2;
-								if(o2.SchoolYear.length() > 0)
-									Last_Year_at_School  =  o2.SchoolYear;
-								if(o2.First_Year_Grade.length() > 0)
-									Last_Year_Grade      =  o2.First_Year_Grade;
+								if(o2.getSchoolYear().length() > 0)
+									Last_Year_at_School  =  o2.getSchoolYear();
+								if(o2.getFirst_Year_Grade().length() > 0)
+									Last_Year_Grade      =  o2.getFirst_Year_Grade();
 							}
 						}
 					}
 				} 
 			if(oNewest != null) {
-				oNewest.First_Year_at_School  = First_Year_at_School;
-				oNewest.Last_Year_at_School   = Last_Year_at_School;
-				oNewest.First_Year_Grade      = First_Year_Grade;
-				oNewest.Last_Year_Grade       = Last_Year_Grade;
-				if(type.equals("Student") && oNewest.Last_Year_Grade.equals("12")) {
-					oNewest.Class_of = Last_Year_at_School.substring(5);
+				oNewest.setFirst_Year_at_School(First_Year_at_School);
+				oNewest.setLast_Year_at_School(Last_Year_at_School);
+				oNewest.setFirst_Year_Grade(First_Year_Grade);
+				oNewest.setLast_Year_Grade(Last_Year_Grade);
+				if(type.equals("Student") && oNewest.getLast_Year_Grade().equals("12")) {
+					oNewest.setClass_of(Last_Year_at_School.substring(5));
 				}
 					
 				reducedlist.add(oNewest);
@@ -247,7 +247,7 @@ public class OaImportToSF {
 		
 		Set<String> adults = new HashSet<String>(Arrays.asList(adultTypes));
 		for(SFImportObject o: foreignKeyList) {
-			if(adults.contains(o.OA_Account_Type)) {
+			if(adults.contains(o.getOA_Account_Type())) {
 				list.add(o);
 			}
 		}
@@ -255,12 +255,12 @@ public class OaImportToSF {
 		oNewest = null;
 		for(String type : adultTypes ) {			
 			for(SFImportObject o2 : list) {
-				if( o2.OA_Account_Type.equals(type) ){
+				if( o2.getOA_Account_Type().equals(type) ){
 					if(oNewest == null) {
 						oNewest = o2;
 					} else {
-						if (Integer.parseInt(o2.SchoolYear.substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
-						} else if(Integer.parseInt(o2.SchoolYear.substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
+						if (Integer.parseInt(o2.getSchoolYear().substring(0, 4)) < Integer.parseInt(First_Year_at_School.substring(0, 4))) {
+						} else if(Integer.parseInt(o2.getSchoolYear().substring(0, 4)) > Integer.parseInt(Last_Year_at_School.substring(0, 4))) {
 							oNewest = o2;
 						}
 					}
@@ -268,11 +268,11 @@ public class OaImportToSF {
 			} // this adult
 			
 			if(oNewest != null) {
-				oNewest.First_Year_at_School   = First_Year_at_School;  // This will be for the last Student processed, in the case of multiple enrollees, so it is imperfect
-				oNewest.Last_Year_at_School    = Last_Year_at_School;
-				oNewest.First_Year_Grade       = First_Year_Grade; 			
-				oNewest.Last_Year_Grade        = Last_Year_Grade; 			
-				oNewest.Student_Names          = "\"" + students + "\"";
+				oNewest.setFirst_Year_at_School(First_Year_at_School);  // This will be for the last Student processed, in the case of multiple enrollees, so it is imperfect
+				oNewest.setLast_Year_at_School(Last_Year_at_School);
+				oNewest.setFirst_Year_Grade(First_Year_Grade); 			
+				oNewest.setLast_Year_Grade(Last_Year_Grade); 			
+				oNewest.setStudent_Names("\"" + students + "\"");
 				reducedlist.add(oNewest);
 				oNewest = null;
 			}

@@ -37,11 +37,25 @@ public class NPSPData {
 		SFImportObject sfioKido = new SFImportObject();
 
 		try {
-			sfio2Par.SchoolYear = sfioPar1.SchoolYear = sfioPar2.SchoolYear = sfioPar3.SchoolYear = sfioPar4.SchoolYear = sfioKido.SchoolYear = sa[0].trim();
-			String foreignKey = sa[2].replaceAll("!", "").trim();
-			sfio2Par.ACCOUNT1_NAME = sfioPar1.ACCOUNT1_NAME = sfioPar2.ACCOUNT1_NAME = sfioPar3.ACCOUNT1_NAME = sfioPar4.ACCOUNT1_NAME = 
-					sfioKido.ACCOUNT1_NAME = sfio2Par.OA_SIS_Unique_ID = sfioPar1.OA_SIS_Unique_ID = sfioPar2.OA_SIS_Unique_ID = sfioPar3.OA_SIS_Unique_ID = sfioPar4.OA_SIS_Unique_ID = 
-					sfioKido.OA_SIS_Unique_ID = foreignKey;
+			sfio2Par.setSchoolYear(sa[0]);
+			sfioPar1.setSchoolYear(sa[0]);
+			sfioPar2.setSchoolYear(sa[0]);
+			sfioPar3.setSchoolYear(sa[0]);
+			sfioPar4.setSchoolYear(sa[0]);
+			sfioKido.setSchoolYear(sa[0]);
+			String foreignKey = sa[2].replaceAll("!", "");
+			sfio2Par.setACCOUNT1_NAME(foreignKey);
+			sfioPar1.setACCOUNT1_NAME(foreignKey);
+			sfioPar2.setACCOUNT1_NAME(foreignKey);
+			sfioPar3.setACCOUNT1_NAME(foreignKey);
+			sfioPar4.setACCOUNT1_NAME(foreignKey);
+			sfioKido.setACCOUNT1_NAME(foreignKey);
+			sfio2Par.setOA_SIS_Unique_ID(foreignKey);
+			sfioPar1.setOA_SIS_Unique_ID(foreignKey);
+			sfioPar2.setOA_SIS_Unique_ID(foreignKey);
+			sfioPar3.setOA_SIS_Unique_ID(foreignKey);
+			sfioPar4.setOA_SIS_Unique_ID(foreignKey);
+			sfioKido.setOA_SIS_Unique_ID(foreignKey);
 			
 				
 			if( year == 2005 ) {
@@ -54,22 +68,22 @@ public class NPSPData {
 
 			preserveContact2withNoLastName(sfio2Par, sfioPar1, sfioPar2, sfioPar3, sfioPar4, sfioKido);
 			
-			sfioKido.First_Year_at_School = sa[0];
+			sfioKido.setFirst_Year_at_School(sa[0]);
 
 		} catch( Exception e ) {
 			System.out.println("parseEarlyLine, Error parsing: " + sa);
 		}
 
 		List<SFImportObject> objs = new ArrayList<SFImportObject>();
-		if( sfio2Par.OA_Account_Type != "Null" ) 
+		if( sfio2Par.getOA_Account_Type() != "Null" ) 
 			objs.add(sfio2Par);
-		if( sfioPar1.OA_Account_Type != "Null" ) 
+		if( sfioPar1.getOA_Account_Type() != "Null" ) 
 			objs.add(sfioPar1);
-		if( sfioPar2.OA_Account_Type != "Null" ) 
+		if( sfioPar2.getOA_Account_Type() != "Null" ) 
 			objs.add(sfioPar2);
-		if( sfioPar3.OA_Account_Type != "Null" ) 
+		if( sfioPar3.getOA_Account_Type() != "Null" ) 
 			objs.add(sfioPar3);
-		if( sfioPar4.OA_Account_Type != "Null" ) 
+		if( sfioPar4.getOA_Account_Type() != "Null" ) 
 			objs.add(sfioPar4);
 		
 		objs.add(sfioKido);
@@ -104,35 +118,35 @@ public class NPSPData {
 	private void parseEarlyParentsNonSecondaryPhonesAddress(SFImportObject sfio, boolean bManFirst, String[] sa) {
 		int year = Integer.valueOf(sa[0].substring(0, 4));
 		
-		sfio.HOME_STREET              = sa[13];
-		sfio.HOME_CITY                = sa[14];
-		sfio.HOME_STATE_PROVINCE      = sa[15];
-		sfio.HOME_ZIP_POSTAL_CODE     = sa[16];
-		sfio.OA_Household_Phone       = sa[17];
-		sfio.CONTACT1_HOME_PHONE	  = sa[17];
-		sfio.CONTACT1_WORK_PHONE      = (bManFirst) ? sa[20] : sa[21];
-		sfio.CONTACT2_WORK_PHONE      = (bManFirst) ? sa[21] : sa[20];
-		sfio.CONTACT1_MOBILE_PHONE    = (bManFirst) ? sa[22] : sa[23];
-		sfio.CONTACT2_MOBILE_PHONE    = (bManFirst) ? sa[23] : sa[22];
-		sfio.CONTACT1_SALUTATION      = sa[24];
-		sfio.ACCOUNT2_NAME			  = sfio.ACCOUNT1_NAME;
+		sfio.setHOME_STREET(sa[13]);
+		sfio.setHOME_CITY(sa[14]);
+		sfio.setHOME_STATE_PROVINCE(sa[15]);
+		sfio.setHOME_ZIP_POSTAL_CODE(sa[16]);
+		sfio.setOA_Household_Phone(sa[17]);
+		sfio.setCONTACT1_HOME_PHONE(sa[17]);
+		sfio.setCONTACT1_WORK_PHONE((bManFirst) ? sa[20] : sa[21]);
+		sfio.setCONTACT2_WORK_PHONE((bManFirst) ? sa[21] : sa[20]);
+		sfio.setCONTACT1_MOBILE_PHONE((bManFirst) ? sa[22] : sa[23]);
+		sfio.setCONTACT2_MOBILE_PHONE((bManFirst) ? sa[23] : sa[22]);
+		sfio.setCONTACT1_SALUTATION(sa[24]);
+		sfio.setACCOUNT2_NAME(sfio.getACCOUNT1_NAME());
 		
 		if( year == 2008 || year == 2009 || year == 2010 ) {
-			sfio.CONTACT1_PREFERRED_EMAIL = sa[33];
-			sfio.CONTACT1_PERSONAL_EMAIL  = (bManFirst) ? sa[33] : sa[34];
-			sfio.CONTACT2_PERSONAL_EMAIL  = (bManFirst) ? sa[34] : sa[33];
-			sfio.CONTACT2_PREFERRED_EMAIL = (bManFirst) ? sa[34] : sa[33];
+			sfio.setCONTACT1_PREFERRED_EMAIL(sa[33]);
+			sfio.setCONTACT1_PERSONAL_EMAIL((bManFirst) ? sa[33] : sa[34]);
+			sfio.setCONTACT2_PERSONAL_EMAIL((bManFirst) ? sa[34] : sa[33]);
+			sfio.setCONTACT2_PREFERRED_EMAIL((bManFirst) ? sa[34] : sa[33]);
 		} else {
-			sfio.CONTACT1_PREFERRED_EMAIL = sa[33];
-			sfio.CONTACT1_PERSONAL_EMAIL  = (bManFirst) ? sa[34] : sa[36];
-			sfio.CONTACT2_PERSONAL_EMAIL  = (bManFirst) ? sa[36] : sa[34];
-			sfio.CONTACT1_WORK_EMAIL      = (bManFirst) ? sa[35] : sa[37];
-			sfio.CONTACT2_WORK_EMAIL      = (bManFirst) ? sa[37] : sa[35];			
+			sfio.setCONTACT1_PREFERRED_EMAIL(sa[33]);
+			sfio.setCONTACT1_PERSONAL_EMAIL((bManFirst) ? sa[34] : sa[36]);
+			sfio.setCONTACT2_PERSONAL_EMAIL((bManFirst) ? sa[36] : sa[34]);
+			sfio.setCONTACT1_WORK_EMAIL((bManFirst) ? sa[35] : sa[37]);
+			sfio.setCONTACT2_WORK_EMAIL((bManFirst) ? sa[37] : sa[35]);			
 		}
 		
-		sfio.Relationship1            = (bManFirst) ? "Father" : "Mother";
-		if(sfio.OA_Account_Type.equals("Parents Together")) {
-			sfio.Relationship2        = (bManFirst) ? "Mother" : "Father";
+		sfio.setRelationship1((bManFirst) ? "Father" : "Mother");
+		if(sfio.getOA_Account_Type().equals("Parents Together")) {
+			sfio.setRelationship2((bManFirst) ? "Mother" : "Father");
 		}
 	}
 	
@@ -143,49 +157,49 @@ public class NPSPData {
 			if( sa[3].contains("/") ) {								// Two parents living together, different last names
 				String[] pars = sa[3].split("/");					// Jacob Rosenberg / Patricia Reed	
 				String[] names = buildSFName(pars[0]);
-				sfio2Par.CONTACT1_FIRSTNAME = names[0].trim();
-				sfio2Par.CONTACT1_LASTNAME = names[1].trim();
+				sfio2Par.setCONTACT1_FIRSTNAME(names[0]);
+				sfio2Par.setCONTACT1_LASTNAME(names[1]);
 				names = buildSFName(pars[1]);
-				sfio2Par.CONTACT2_FIRSTNAME = names[0].trim();
-				sfio2Par.CONTACT2_LASTNAME  = names[1].trim();
-				sfio2Par.ACCOUNT2_NAME      = sfio2Par.ACCOUNT1_NAME;
-				sfio2Par.OA_Account_Type    = "Parents Together";
-				sfio2Par.Contact_Primary    = "true";
+				sfio2Par.setCONTACT2_FIRSTNAME(names[0]);
+				sfio2Par.setCONTACT2_LASTNAME(names[1]);
+				sfio2Par.setACCOUNT2_NAME(sfio2Par.getACCOUNT1_NAME());
+				sfio2Par.setOA_Account_Type("Parents Together");
+				sfio2Par.setContact_Primary("true");
 				parseEarlyParentsNonSecondaryPhonesAddress( sfio2Par,  bManFirst, sa);
 			} else if ( sa[3].contains("&") ) {						// Two parents living together, SAME last names
 				String[] pars = sa[3].split("&");                   // Monika & Alan Rosenfeld	
-				sfio2Par.CONTACT1_FIRSTNAME = pars[0].trim();
+				sfio2Par.setCONTACT1_FIRSTNAME(pars[0]);
 				String[] names = buildSFName(pars[1]);
-				sfio2Par.CONTACT2_FIRSTNAME = names[0].trim();
-				sfio2Par.CONTACT1_LASTNAME  = names[1].trim();
-				sfio2Par.CONTACT2_LASTNAME  = names[1].trim();
-				sfio2Par.ACCOUNT2_NAME      = sfio2Par.ACCOUNT1_NAME;
-				sfio2Par.OA_Account_Type    = "Parents Together";
-				sfio2Par.Contact_Primary    = "true";
+				sfio2Par.setCONTACT2_FIRSTNAME(names[0]);
+				sfio2Par.setCONTACT1_LASTNAME(names[1]);
+				sfio2Par.setCONTACT2_LASTNAME(names[1]);
+				sfio2Par.setACCOUNT2_NAME(sfio2Par.getACCOUNT1_NAME());
+				sfio2Par.setOA_Account_Type("Parents Together");
+				sfio2Par.setContact_Primary("true");
 				parseEarlyParentsNonSecondaryPhonesAddress( sfio2Par,  bManFirst, sa);
 			} else {												// One parent living with child
 				String[] names = buildSFName(sa[3]);
-				sfioPar1.CONTACT1_FIRSTNAME = names[0].trim();
-				sfioPar1.CONTACT1_LASTNAME  = names[1].trim();
-				sfioPar1.OA_Account_Type    = "Parent";
-				sfioPar1.Contact_Primary    = "true";
+				sfioPar1.setCONTACT1_FIRSTNAME(names[0]);
+				sfioPar1.setCONTACT1_LASTNAME(names[1]);
+				sfioPar1.setOA_Account_Type("Parent");
+				sfioPar1.setContact_Primary("true");
 				parseEarlyParentsNonSecondaryPhonesAddress( sfioPar1,  bManFirst, sa);
 				if( sa[5].trim().length() > 0 ) {					// Second parent at another address
 					names = buildSFName(sa[5]);
-					sfioPar2.CONTACT1_FIRSTNAME       = names[0].trim();
-					sfioPar2.CONTACT1_LASTNAME        = names[1].trim();
-					sfioPar2.OA_Account_Type          = "Parent";
-					sfioPar2.HOME_STREET              = sa[26];
-					sfioPar2.HOME_CITY                = sa[27];
-					sfioPar2.HOME_STATE_PROVINCE      = sa[28];
-					sfioPar2.HOME_ZIP_POSTAL_CODE     = sa[29];
-					sfioPar2.OA_Household_Phone       = sa[30];
-					sfioPar2.CONTACT1_WORK_PHONE      = sa[31];
-					sfioPar2.CONTACT1_SALUTATION      = sa[32];
-					sfioPar2.CONTACT1_WORK_EMAIL      = sa[21];
-					sfioPar2.CONTACT2_WORK_EMAIL      = sa[20];
-					sfioPar2.CONTACT1_ALTERNATE_EMAIL = sa[38];
-					sfioPar2.CONTACT2_ALTERNATE_EMAIL = sa[40];
+					sfioPar2.setCONTACT1_FIRSTNAME(names[0]);
+					sfioPar2.setCONTACT1_LASTNAME(names[1]);
+					sfioPar2.setOA_Account_Type("Parent");
+					sfioPar2.setHOME_STREET(sa[26]);
+					sfioPar2.setHOME_CITY(sa[27]);
+					sfioPar2.setHOME_STATE_PROVINCE(sa[28]);
+					sfioPar2.setHOME_ZIP_POSTAL_CODE(sa[29]);
+					sfioPar2.setOA_Household_Phone(sa[30]);
+					sfioPar2.setCONTACT1_WORK_PHONE(sa[31]);
+					sfioPar2.setCONTACT1_SALUTATION(sa[32]);
+					sfioPar2.setCONTACT1_WORK_EMAIL(sa[21]);
+					sfioPar2.setCONTACT2_WORK_EMAIL(sa[20]);
+					sfioPar2.setCONTACT1_ALTERNATE_EMAIL(sa[38]);
+					sfioPar2.setCONTACT2_ALTERNATE_EMAIL(sa[40]);
 				}
 			}
 
@@ -202,40 +216,40 @@ public class NPSPData {
 			boolean bManFirst = sa[4].contains("1");
 			if(sa[5].trim().isEmpty()) {		// PARENT/GUAR 2, One parent living with child (No second parent name)
 				names = buildSFName(sa[3]);
-				sfioPar1.CONTACT1_FIRSTNAME = names[0].trim();
-				sfioPar1.CONTACT1_LASTNAME  = names[1].trim();
-				sfioPar1.OA_Account_Type    = "Parent";
-				sfioPar1.Contact_Primary    = "true";
+				sfioPar1.setCONTACT1_FIRSTNAME(names[0]);
+				sfioPar1.setCONTACT1_LASTNAME(names[1]);
+				sfioPar1.setOA_Account_Type("Parent");
+				sfioPar1.setContact_Primary("true");
 				parseEarlyParentsNonSecondaryPhonesAddress( sfioPar1,  bManFirst, sa);
 			} else if( ! sa[26].trim().isEmpty() ) { // PAR 2 STREET has content, then two parents with two addresses
 				names = buildSFName(sa[5]);
-				sfioPar2.CONTACT1_FIRSTNAME    = names[0].trim();
-				sfioPar2.CONTACT1_LASTNAME     = names[1].trim();
-				sfioPar2.OA_Account_Type       = "Parent";
-				sfioPar2.HOME_STREET           = sa[26];
-				sfioPar2.HOME_CITY             = sa[27];
-				sfioPar2.HOME_STATE_PROVINCE   = sa[28];
-				sfioPar2.HOME_ZIP_POSTAL_CODE  = sa[29];
-				sfioPar2.OA_Household_Phone    = sa[30];
-				sfioPar2.CONTACT1_HOME_PHONE   = sa[30];
-				sfioPar2.CONTACT1_WORK_PHONE   = sa[31];
-				sfioPar2.CONTACT1_SALUTATION   = sa[32];
-				sfioPar2.CONTACT1_WORK_EMAIL   = sa[21];
-				sfioPar2.CONTACT2_WORK_EMAIL   = sa[20];
-				sfioPar2.CONTACT1_ALTERNATE_EMAIL = sa[38];
-				sfioPar2.CONTACT2_ALTERNATE_EMAIL = sa[40];
+				sfioPar2.setCONTACT1_FIRSTNAME(names[0]);
+				sfioPar2.setCONTACT1_LASTNAME(names[1]);
+				sfioPar2.setOA_Account_Type("Parent");
+				sfioPar2.setHOME_STREET(sa[26]);
+				sfioPar2.setHOME_CITY(sa[27]);
+				sfioPar2.setHOME_STATE_PROVINCE(sa[28]);
+				sfioPar2.setHOME_ZIP_POSTAL_CODE(sa[29]);
+				sfioPar2.setOA_Household_Phone(sa[30]);
+				sfioPar2.setCONTACT1_HOME_PHONE(sa[30]);
+				sfioPar2.setCONTACT1_WORK_PHONE(sa[31]);
+				sfioPar2.setCONTACT1_SALUTATION(sa[32]);
+				sfioPar2.setCONTACT1_WORK_EMAIL(sa[21]);
+				sfioPar2.setCONTACT2_WORK_EMAIL(sa[20]);
+				sfioPar2.setCONTACT1_ALTERNATE_EMAIL(sa[38]);
+				sfioPar2.setCONTACT2_ALTERNATE_EMAIL(sa[40]);
 				parseEarlyParentsNonSecondaryPhonesAddress( sfioPar2,  bManFirst, sa);
 			} else {								// Two parents living together,
 				names = buildSFName(sa[3]);
-				sfio2Par.CONTACT1_FIRSTNAME = names[0].trim();
-				sfio2Par.CONTACT1_LASTNAME = names[1].trim();
+				sfio2Par.setCONTACT1_FIRSTNAME(names[0]);
+				sfio2Par.setCONTACT1_LASTNAME(names[1]);
 				names = buildSFName(sa[5]);
-				sfio2Par.CONTACT2_FIRSTNAME = names[0].trim();
-				sfio2Par.CONTACT2_LASTNAME  = names[1].trim();
-				sfio2Par.OA_Account_Type    = "Parents Together";
-				sfio2Par.Contact_Primary    = "true";
-				sfio2Par.CONTACT1_HOME_PHONE   = sa[30];
-				sfio2Par.CONTACT2_HOME_PHONE   = sa[30];
+				sfio2Par.setCONTACT2_FIRSTNAME(names[0]);
+				sfio2Par.setCONTACT2_LASTNAME(names[1]);
+				sfio2Par.setOA_Account_Type("Parents Together");
+				sfio2Par.setContact_Primary("true");
+				sfio2Par.setCONTACT1_HOME_PHONE(sa[30]);
+				sfio2Par.setCONTACT2_HOME_PHONE(sa[30]);
 				parseEarlyParentsNonSecondaryPhonesAddress( sfio2Par,  bManFirst, sa);
 			} 
 			parseEarlyKidRecord(sfioKido, sa);
@@ -247,23 +261,23 @@ public class NPSPData {
 	
 	private void parseEarlyKidRecord(SFImportObject sfioKido, String[] sa) {
 		try { 
-			sfioKido.CONTACT1_FIRSTNAME = sa[7].trim();				// The student,  living with the primary parent, or both parents
+			sfioKido.setCONTACT1_FIRSTNAME(sa[7]);				// The student,  living with the primary parent, or both parents
 			if( sa[8].trim().length() > 0 ) {
-				sfioKido.CONTACT1_FIRSTNAME += " " + sa[8].trim();
+				sfioKido.setCONTACT1_FIRSTNAME(sfioKido.getCONTACT1_FIRSTNAME() + " " + sa[8]);
 			}
-			sfioKido.CONTACT1_LASTNAME    = sa[6].trim();
-			sfioKido.OA_Account_Type      = "Student";
-			sfioKido.Relationship1        = "Student";
-			sfioKido.First_Year_Grade     = sa[11];
-			sfioKido.HOME_STREET          = sa[13];
-			sfioKido.HOME_CITY            = sa[14];
-			sfioKido.HOME_STATE_PROVINCE  = sa[15];
-			sfioKido.HOME_ZIP_POSTAL_CODE = sa[16];
-			sfioKido.OA_Household_Phone   = sa[17];
-			sfioKido.CONTACT1_HOME_PHONE  = sa[17];
+			sfioKido.setCONTACT1_LASTNAME(sa[6]);
+			sfioKido.setOA_Account_Type("Student");
+			sfioKido.setRelationship1("Student");
+			sfioKido.setFirst_Year_Grade(sa[11]);
+			sfioKido.setHOME_STREET(sa[13]);
+			sfioKido.setHOME_CITY(sa[14]);
+			sfioKido.setHOME_STATE_PROVINCE(sa[15]);
+			sfioKido.setHOME_ZIP_POSTAL_CODE(sa[16]);
+			sfioKido.setOA_Household_Phone(sa[17]);
+			sfioKido.setCONTACT1_HOME_PHONE(sa[17]);
 
 			if( ! sa[19].equals("1/0/00") )
-				sfioKido.CONTACT1_BIRTHDATE   = sa[19];
+				sfioKido.setCONTACT1_BIRTHDATE(sa[19]);
 
 		} catch( Exception e ) {
 			System.out.println("parseKidRecord, Error parsing " + sa[3] + " in year " + sa[0]);
@@ -276,27 +290,27 @@ public class NPSPData {
 			String name = sa[2].replaceAll("[! ]", "");
 			String[] sap = name.split(";");
 
-			sfioKido.CONTACT1_FIRSTNAME = sap[1];				// The student,  living with the primary parent, or both parents
-			sfioKido.CONTACT1_LASTNAME  = sap[0];
+			sfioKido.setCONTACT1_FIRSTNAME(sap[1]);				// The student,  living with the primary parent, or both parents
+			sfioKido.setCONTACT1_LASTNAME(sap[0]);
 			if(sa[137].equals("ACTIVE")) {
-				sfioKido.OA_Account_Type  = "Student";		
-				sfioKido.Relationship1    = "Student";
+				sfioKido.setOA_Account_Type("Student");		
+				sfioKido.setRelationship1("Student");
 			} else {
-				sfioKido.OA_Account_Type  = "Summer Student";
-				sfioKido.Relationship1    = "Summer Student";
+				sfioKido.setOA_Account_Type("Summer Student");
+				sfioKido.setRelationship1("Summer Student");
 			}
 
-			sfioKido.HOME_STREET            = sa[12];
-			sfioKido.HOME_CITY              = sa[13];
-			sfioKido.HOME_STATE_PROVINCE    = sa[14];
-			sfioKido.HOME_COUNTRY           = sa[15];
-			sfioKido.HOME_ZIP_POSTAL_CODE   = sa[16];
-			sfioKido.OA_Household_Phone     = sa[17];
-			sfioKido.CONTACT1_HOME_PHONE    = sa[17];
+			sfioKido.setHOME_STREET(sa[12]);
+			sfioKido.setHOME_CITY(sa[13]);
+			sfioKido.setHOME_STATE_PROVINCE(sa[14]);
+			sfioKido.setHOME_COUNTRY(sa[15]);
+			sfioKido.setHOME_ZIP_POSTAL_CODE(sa[16]);
+			sfioKido.setOA_Household_Phone(sa[17]);
+			sfioKido.setCONTACT1_HOME_PHONE(sa[17]);
 
 			if( ! sa[136].equals("1/0/00") )
-				sfioKido.CONTACT1_BIRTHDATE   	= sa[136];
-			sfioKido.First_Year_Grade    		= sa[135];
+				sfioKido.setCONTACT1_BIRTHDATE(sa[136]);
+			sfioKido.setFirst_Year_Grade(sa[135]);
 
 		} catch( Exception e ) {
 			System.out.println("parseKidRecord, Error parsing " + sa[3] + " in year " + sa[0]);
@@ -318,22 +332,22 @@ public class NPSPData {
 			SFImportObject sfioPar3, SFImportObject sfioPar4, SFImportObject sfioKido, String[] sa) {
 		try { 
 			if( compareAddresses(sa[12], sa[45]) ) {                    // Two parents living together, same address
-				sfio2Par.CONTACT1_FIRSTNAME = sa[5].trim();
+				sfio2Par.setCONTACT1_FIRSTNAME(sa[5]);
 				if( ! sa[6].trim().isEmpty() )
-					sfio2Par.CONTACT1_FIRSTNAME += " " + sa[6].trim();
-				sfio2Par.CONTACT1_LASTNAME = sa[7].trim();
+					sfio2Par.setCONTACT1_FIRSTNAME(sfio2Par.getCONTACT1_FIRSTNAME() + " " + sa[6]);
+				sfio2Par.setCONTACT1_LASTNAME(sa[7]);
 				if( ! sa[8].trim().isEmpty() )
-					sfio2Par.CONTACT1_LASTNAME += " " + sa[8].trim();
+					sfio2Par.setCONTACT1_LASTNAME(sfio2Par.getCONTACT1_LASTNAME() + " " + sa[8]);
 
-				sfio2Par.CONTACT2_FIRSTNAME = sa[38].trim();
+				sfio2Par.setCONTACT2_FIRSTNAME(sa[38]);
 				if( ! sa[41].trim().isEmpty() )
-					sfio2Par.CONTACT2_FIRSTNAME += " " + sa[39].trim();
-				sfio2Par.CONTACT2_LASTNAME = sa[40].trim();
+					sfio2Par.setCONTACT2_FIRSTNAME(sfio2Par.getCONTACT2_FIRSTNAME() + " " + sa[39]);
+				sfio2Par.setCONTACT2_LASTNAME(sa[40]);
 				if( ! sa[41].trim().isEmpty() )
-					sfio2Par.CONTACT2_LASTNAME += " " + sa[41].trim();
-				sfio2Par.ACCOUNT2_NAME      = sfio2Par.ACCOUNT1_NAME;
-				sfio2Par.OA_Account_Type = "Parents Together";
-				sfio2Par.Contact_Primary = "true";
+					sfio2Par.setCONTACT2_LASTNAME(sfio2Par.getCONTACT2_LASTNAME() + " " + sa[41]);
+				sfio2Par.setACCOUNT2_NAME(sfio2Par.getACCOUNT1_NAME());
+				sfio2Par.setOA_Account_Type("Parents Together");
+				sfio2Par.setContact_Primary("true");
 				parseLateParentsMarriedPhonesAddress( sfio2Par, sa);
 				if( ! sa[7+(2*33)].trim().isEmpty() ) 					// If there is a contact 3 last name ...   7 40 73
 					parseLateContactsNamePhonesAddress(sfioPar3, 3, sa);
@@ -368,32 +382,32 @@ public class NPSPData {
 	
 	// Parents together same name or different name
 	private void parseLateParentsMarriedPhonesAddress(SFImportObject sfio, String[] sa) {
-		sfio.HOME_STREET              = sa[12];
-		sfio.HOME_CITY                = sa[13];
-		sfio.HOME_STATE_PROVINCE      = sa[14];
-		sfio.HOME_COUNTRY     		  = sa[15];
-		sfio.HOME_ZIP_POSTAL_CODE     = sa[16];
-		sfio.OA_Household_Phone       = sa[17];
-		sfio.CONTACT1_HOME_PHONE   	  = sa[17];
-		sfio.CONTACT1_MOBILE_PHONE    = sa[19];
-		sfio.CONTACT1_WORK_PHONE      = sa[20];
+		sfio.setHOME_STREET(sa[12]);
+		sfio.setHOME_CITY(sa[13]);
+		sfio.setHOME_STATE_PROVINCE(sa[14]);
+		sfio.setHOME_COUNTRY(sa[15]);
+		sfio.setHOME_ZIP_POSTAL_CODE(sa[16]);
+		sfio.setOA_Household_Phone(sa[17]);
+		sfio.setCONTACT1_HOME_PHONE(sa[17]);
+		sfio.setCONTACT1_MOBILE_PHONE(sa[19]);
+		sfio.setCONTACT1_WORK_PHONE(sa[20]);
 		
-		sfio.CONTACT1_SALUTATION      = sa[4];
-		sfio.CONTACT1_PREFERRED_EMAIL = sa[22];
-		sfio.CONTACT1_PERSONAL_EMAIL  = sa[22];
-		sfio.CONTACT1_WORK_EMAIL      = sa[23];
+		sfio.setCONTACT1_SALUTATION(sa[4]);
+		sfio.setCONTACT1_PREFERRED_EMAIL(sa[22]);
+		sfio.setCONTACT1_PERSONAL_EMAIL(sa[22]);
+		sfio.setCONTACT1_WORK_EMAIL(sa[23]);
 
-		sfio.CONTACT1_HOME_PHONE   	  = sa[17];
-		sfio.CONTACT2_MOBILE_PHONE    = sa[52];
-		sfio.CONTACT2_WORK_PHONE      = sa[53];
+		sfio.setCONTACT1_HOME_PHONE(sa[17]);
+		sfio.setCONTACT2_MOBILE_PHONE(sa[52]);
+		sfio.setCONTACT2_WORK_PHONE(sa[53]);
 		
-		sfio.CONTACT2_SALUTATION      = sa[37];
-		sfio.CONTACT2_PREFERRED_EMAIL = sa[55];
-		sfio.CONTACT2_PERSONAL_EMAIL  = sa[55];
-		sfio.CONTACT2_WORK_EMAIL      = sa[56];
+		sfio.setCONTACT2_SALUTATION(sa[37]);
+		sfio.setCONTACT2_PREFERRED_EMAIL(sa[55]);
+		sfio.setCONTACT2_PERSONAL_EMAIL(sa[55]);
+		sfio.setCONTACT2_WORK_EMAIL(sa[56]);
 		
-		sfio.Relationship1            = sa[26];
-		sfio.Relationship2            = sa[59];
+		sfio.setRelationship1(sa[26]);
+		sfio.setRelationship2(sa[59]);
 	}
 	
 	// Single Parents, anyone in a SIS contact1, and also handles contact2,3,&4
@@ -402,7 +416,7 @@ public class NPSPData {
 		switch(contact) {
 			case 1:
 				offset = 0;
-				sfio.Contact_Primary = "true";
+				sfio.setContact_Primary("true");
 				break;
 			case 2:
 				offset = 33; 
@@ -415,31 +429,31 @@ public class NPSPData {
 				break;
 		}
 		
-		sfio.CONTACT1_FIRSTNAME = sa[5+offset].trim();
+		sfio.setCONTACT1_FIRSTNAME(sa[5+offset]);
 		if( ! sa[6+offset].trim().isEmpty() )
-			sfio.CONTACT1_FIRSTNAME += " " + sa[6+offset].trim();
-		sfio.CONTACT1_LASTNAME = sa[7+offset].trim();
+			sfio.setCONTACT1_FIRSTNAME(sfio.getCONTACT1_FIRSTNAME() + " " + sa[6+offset]);
+		sfio.setCONTACT1_LASTNAME(sa[7+offset]);
 		if( ! sa[8+offset].trim().isEmpty() )
-			sfio.CONTACT1_LASTNAME += " " + sa[8+offset].trim();
+			sfio.setCONTACT1_LASTNAME(sfio.getCONTACT1_LASTNAME() + " " + sa[8+offset]);
 
-		sfio.HOME_STREET              = sa[12+offset];
-		sfio.HOME_CITY                = sa[13+offset];
-		sfio.HOME_STATE_PROVINCE      = sa[14+offset];
-		sfio.HOME_COUNTRY     		  = sa[15+offset];
-		sfio.HOME_ZIP_POSTAL_CODE     = sa[16+offset];
+		sfio.setHOME_STREET(sa[12+offset]);
+		sfio.setHOME_CITY(sa[13+offset]);
+		sfio.setHOME_STATE_PROVINCE(sa[14+offset]);
+		sfio.setHOME_COUNTRY(sa[15+offset]);
+		sfio.setHOME_ZIP_POSTAL_CODE(sa[16+offset]);
 
-		sfio.OA_Household_Phone       = sa[17+offset];
-		sfio.CONTACT1_HOME_PHONE      = sa[17+offset];
-		sfio.CONTACT1_MOBILE_PHONE    = sa[19+offset];
-		sfio.CONTACT1_WORK_PHONE      = sa[20+offset];
+		sfio.setOA_Household_Phone(sa[17+offset]);
+		sfio.setCONTACT1_HOME_PHONE(sa[17+offset]);
+		sfio.setCONTACT1_MOBILE_PHONE(sa[19+offset]);
+		sfio.setCONTACT1_WORK_PHONE(sa[20+offset]);
 		
-		sfio.CONTACT1_SALUTATION      = sa[4+offset];
-		sfio.CONTACT1_PREFERRED_EMAIL = sa[22+offset];
-		sfio.CONTACT1_PERSONAL_EMAIL  = sa[22+offset];
-		sfio.CONTACT1_WORK_EMAIL      = sa[23+offset];
+		sfio.setCONTACT1_SALUTATION(sa[4+offset]);
+		sfio.setCONTACT1_PREFERRED_EMAIL(sa[22+offset]);
+		sfio.setCONTACT1_PERSONAL_EMAIL(sa[22+offset]);
+		sfio.setCONTACT1_WORK_EMAIL(sa[23+offset]);
 		
-		sfio.Relationship1            = sa[26+offset];
-		sfio.OA_Account_Type 	      = sa[26+offset];
+		sfio.setRelationship1(sa[26+offset]);
+		sfio.setOA_Account_Type(sa[26+offset]);
 	}
 	
 	// Salesforce won't import records that contain secondary contact info ... emails & phones ... if there is no last name in CONTACT2
@@ -449,24 +463,24 @@ public class NPSPData {
 		SFImportObject[] sfios = { sfio2Par, sfioPar1, sfioPar2, sfioPar3, sfioPar4, sfioKido };
 		
 		for( SFImportObject sfio : sfios ) {
-			if( ( sfio2Par.CONTACT2_LASTNAME.trim().length() == 0 ) &&
-				( ( sfio.CONTACT2_SALUTATION.trim().length() > 0 ) ||
-				  ( sfio.CONTACT2_FIRSTNAME.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_BIRTHDATE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_LASTNAME.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_TITLE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_PERSONAL_EMAIL.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_WORK_EMAIL.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_ALTERNATE_EMAIL.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_PREFERRED_EMAIL.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_HOME_PHONE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_WORK_PHONE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_MOBILE_PHONE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_OTHER_PHONE.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_PERSONAL_EMAIL.trim().length() > 0 ) ||
-	              ( sfio.CONTACT2_PREFERRED_PHONE.trim().length() > 0 ) ) ) {
-				sfio.CONTACT2_LASTNAME = "Placeholder";
-				sfio.ACCOUNT2_NAME     = sfio.ACCOUNT1_NAME;
+			if( ( sfio2Par.getCONTACT2_LASTNAME().trim().length() == 0 ) &&
+				( ( sfio.getCONTACT2_SALUTATION().trim().length() > 0 ) ||
+				  ( sfio.getCONTACT2_FIRSTNAME().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_BIRTHDATE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_LASTNAME().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_TITLE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_PERSONAL_EMAIL().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_WORK_EMAIL().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_ALTERNATE_EMAIL().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_PREFERRED_EMAIL().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_HOME_PHONE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_WORK_PHONE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_MOBILE_PHONE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_OTHER_PHONE().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_PERSONAL_EMAIL().trim().length() > 0 ) ||
+	              ( sfio.getCONTACT2_PREFERRED_PHONE().trim().length() > 0 ) ) ) {
+				sfio.setCONTACT2_LASTNAME("Placeholder");
+				sfio.setACCOUNT2_NAME(sfio.getACCOUNT1_NAME());
 
 			}
 		}
