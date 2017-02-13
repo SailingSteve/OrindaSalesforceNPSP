@@ -40,66 +40,45 @@ import java.util.Set;
 public class OaImportToSF {
 	public static void main(String[] args) throws IOException {
 		String inFile = "oaIn.csv";
-		String outFile = "oaOut.csv";
+		String outFile = "reduced.csv";
 		if(args.length > 0)
 			inFile = args[0];
 		if(args.length > 1)
 			outFile = args[1];
 		
-		/*
-		 * Step:  Delete the previous output files
-		 */
-		FileInputStream fstream = null;
-		try {
-			File f = new File(outFile);
-	        f.delete();
-	        f = new File("full.csv");
-	        f.delete();
-	        System.out.println("Deleted full.csv");
-	        f = new File("sibs.txt");
-	        f.delete();
-	        System.out.println("Deleted sibs.txt");
-	        f = new File("reduced.csv");
-	        f.delete();
-	        System.out.println("Deleted reduced.csv");
-			fstream = new FileInputStream(inFile);
-		} catch (FileNotFoundException e) {
-			System.out.println("Unable to open file ... " + inFile);
-			return;
-		}		
+		// Clean up old intermediary and output files, open the new input stream
+		FileInputStream fstream = cleanUpOldFiles(inFile, outFile);
 		
-		/*
-		 * Step:  Read in the processed Excel file, that has been written out from Excel as a csv
-		 */
-		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+		// Read in the processed Excel file, that has been written out from Excel as a csv
+		List<SFImportObject> list =  parseInputFile(fstream);
+		
+		// Replace later student names with the first student name in a family so that they share the first ACCOUNT1 NAME (foreign key)
+		doReplacements(list);
+		
+		 // Sort the list by ACCOUNT1_NAME		
+		Collections.sort(list, new Comparator<SFImportObject>(){
+		     public int compare(SFImportObject o1, SFImportObject o2){
+		         return o1.getACCOUNT1_NAME().compareToIgnoreCase(o2.getACCOUNT1_NAME());
+		     }
+		});
 
-		List<SFImportObject> list = new ArrayList<SFImportObject>();
-		String line = null;  
-		while ((line = br.readLine()) != null)  {  
-			String[] sa = null;
-			int year = 0;
-			try {
-				year = new Integer(line.substring(0, 4));
-				line += ",-";
-				sa = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
-				if( sa.length != 139) {
-					System.out.println("main: line skipped since it contained " + sa.length + " elements: " + line);
-					continue;
-				}
-			} catch (Exception e ) {
-				System.out.println("main, line : " + line + "\n threw " + e);
-				continue;
-			}
-								
-			List<SFImportObject> sfios = null;
-			sfios = new NPSPData().parseLine(sa, year);		
-			list.addAll(sfios);
-		}
-		br.close();
+		// Build the Sibling consolidation list that takes multiple siblings, and associates them under the SIS student name field  that includes  of the first sibling to attend the school
+		buildSiblingSubstitutionList( writeFullCsvIntermediate(list) );
 		
-		/*
-		 * Step:  Replace later student names with the first student name in a family so that they share the first ACCOUNT1 NAME (foreign key)
-		 */		
+		// For a given family, reduce the set of SFImportObjects to the least possible number while retaining the key data	
+		List<SFImportObject> reducedList = reduceSFImports(list);
+		
+		// Write out the output file, reduced.csv, ready to be imported to Salesforce  
+		FileWriter fwRed = new FileWriter(outFile);
+		fwRed.write(SFImportObject.NPSP_Data_ImportTemplate+"\n");
+		for(SFImportObject o: reducedList) {
+			fwRed.write( o.toString() +"\n");
+		}
+		fwRed.close();		
+		System.out.println("Wrote reduced.csv");
+	}
+
+	private static void doReplacements(List<SFImportObject> list) {
 		for(SFImportObject o: list) {
 			String replacement = Siblings.map.get(o.getACCOUNT1_NAME());
 
@@ -111,35 +90,9 @@ public class OaImportToSF {
 				o.setACCOUNT2_NAME(replacement);
 			}
 		}
+	}
 	
-		/*
-		 * Step:  Sort the list by ACCOUNT1_NAME
-		 */		
-		Collections.sort(list, new Comparator<SFImportObject>(){
-		     public int compare(SFImportObject o1, SFImportObject o2){
-		         return o1.getACCOUNT1_NAME().compareToIgnoreCase(o2.getACCOUNT1_NAME());
-		     }
-		});
-
-		FileWriter fullfw = new FileWriter("full.csv");
-		Set<String> linkedHashSet = new LinkedHashSet<String>();
-		for(SFImportObject o: list) {
-			linkedHashSet.add(o.getACCOUNT1_NAME());
-			fullfw.write(o.toString()+"\n");
-		}
-		fullfw.close();
-		System.out.println("Wrote full.csv");  
-		
-		
-		/*
-		 * Build the Sibling consolidation list that takes multiple siblings, and associates them under the SIS student name field 
-		 * that includes  of the first sibling to attend the school 
-		 */
-		buildSiblingSubstitutionList(linkedHashSet);
-		
-		/*
-		 * Step:  For a given family, reduce the set of SFImportObjects to the least possible number while retaining the key data
-		 */		
+	private static List<SFImportObject> reduceSFImports( List<SFImportObject> list) {
 		List<SFImportObject> reducedlist = new ArrayList<SFImportObject>();
 		List<SFImportObject> foreignKeyList = new ArrayList<SFImportObject>();
 		String fkey = "";
@@ -155,20 +108,59 @@ public class OaImportToSF {
 				foreignKeyList.add(o);
 			}
 		}
-		
-		/*
-		 * Final Step: Write out the output file, reduced.csv, ready to be imported to Salesforce  
-		 */		
-		FileWriter fwRed = new FileWriter("reduced.csv");
-		fwRed.write(SFImportObject.NPSP_Data_ImportTemplate+"\n");
-		for(SFImportObject o: reducedlist) {
-			fwRed.write( o.toString() +"\n");
-		}
-		fwRed.close();		
-		System.out.println("Wrote reduced.csv");
-
+		return reducedlist;
 	}
+	
+	private static Set<String> writeFullCsvIntermediate(List<SFImportObject> list) {
+		FileWriter fullfw;
+		Set<String> linkedHashSet = new LinkedHashSet<String>();
+		try {
+			fullfw = new FileWriter("full.csv");
+				for(SFImportObject o: list) {
+				linkedHashSet.add(o.getACCOUNT1_NAME());
+				fullfw.write(o.toString()+"\n");
+			}
+			fullfw.close();
+			System.out.println("Wrote full.csv");  
+		} catch (IOException e) {
+			System.out.println("ERROR: Writing full.csv");
+		}
+		return linkedHashSet;
+	}
+	
+	private static List<SFImportObject>  parseInputFile(FileInputStream fstream) {
+		BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
+		List<SFImportObject> list = new ArrayList<SFImportObject>();
+		String line = null;  
+		try {
+			while ((line = br.readLine()) != null)  {  
+				String[] sa = null;
+				int year = 0;
+				try {
+					year = new Integer(line.substring(0, 4));
+					line += ",-";
+					sa = line.split(",(?=([^\"]*\"[^\"]*\")*[^\"]*$)");
+					if( sa.length != 139) {
+						System.out.println("main: line skipped since it contained " + sa.length + " elements: " + line);
+						continue;
+					}
+				} catch (Exception e ) {
+					System.out.println("main, line : " + line + "\n threw " + e);
+					continue;
+				}
+									
+				List<SFImportObject> sfios = null;
+				sfios = new NPSPData().parseLine(sa, year);		
+				list.addAll(sfios);
+			}
+			br.close();
+		} catch (IOException e) {
+			System.out.println("ERROR: Reading input file");
+		}
+		return list;
+	}
+	
 	/*
 	 * Reduce the set of parent and student names to one of each type for each participant 
 	 * (with the exception of two parents, married and living together, who share one import object)
@@ -290,9 +282,9 @@ public class OaImportToSF {
 	 * Delancy; Steve
 	 * Frank; Joey
 	 */		
-	private static void buildSiblingSubstitutionList(Set<String> linkedHashSet) throws IOException {
+	private static void buildSiblingSubstitutionList(Set<String> linkedHashSet) {
 		/* 
-		 * Step:  Make a map of counters of unique Last Names
+		 * Make a map of counters of unique Last Names
 		 */		
 		Map<String, Integer> counters = new HashMap<String, Integer>();
 		for(String s : linkedHashSet) {
@@ -324,28 +316,54 @@ public class OaImportToSF {
 		*/
 
 		/*
-		 * Step: Write out the list of possible sibling matches, this could be commented out if execution speed became a problem
+		 * Write out the list of possible sibling matches, this could be commented out if execution speed became a problem
 		 * because it is only needed once, and the output file sibs.txt is read into Siblings.java after being manually corrected.
 		 * The data was so messy, it was easier to do a manual step here. 
 		 */		
 		String uniqueKey = "";
-		FileWriter fw = new FileWriter("sibs.txt");
+		FileWriter fw;
+		try {
+			fw = new FileWriter("sibs.txt");
 
-		for(String s : linkedHashSet) {
-			if(uniqueKey.equals("")) {
-				uniqueKey = s.trim();
-			} else {
-				String[] keys  = uniqueKey.split(";");
-				String[] names = s.split(";");
-				if(keys[0].trim().equals(names[0].trim()) ) {
-					fw.write("	  m.put(\"" + s.trim() + "\",\"" + uniqueKey + "\");\n" );
-				} else {
+			for(String s : linkedHashSet) {
+				if(uniqueKey.equals("")) {
 					uniqueKey = s.trim();
+				} else {
+					String[] keys  = uniqueKey.split(";");
+					String[] names = s.split(";");
+					if(keys[0].trim().equals(names[0].trim()) ) {
+						fw.write("	  m.put(\"" + s.trim() + "\",\"" + uniqueKey + "\");\n" );
+					} else {
+						uniqueKey = s.trim();
+					}
 				}
 			}
-		}
 		fw.close();	
+		} catch (IOException e) {
+			System.out.println("ERROR: Writing sibs.txt");
+		}
 		System.out.println("Wrote sibs.txt");  
 	}
 	
+	private static FileInputStream cleanUpOldFiles(String inFile, String outFile) {
+		FileInputStream fstream = null;
+		try {
+			File f = new File(outFile);
+	        f.delete();
+	        f = new File("full.csv");
+	        f.delete();
+	        System.out.println("Deleted full.csv");
+	        f = new File("sibs.txt");
+	        f.delete();
+	        System.out.println("Deleted sibs.txt");
+	        f = new File("reduced.csv");
+	        f.delete();
+	        System.out.println("Deleted reduced.csv");
+			fstream = new FileInputStream(inFile);
+		} catch (FileNotFoundException e) {
+			System.out.println("Unable to open file ... " + inFile);
+			return null;
+		}		
+		return fstream;
+	}
 }
